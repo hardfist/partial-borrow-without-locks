@@ -60,6 +60,12 @@ fn optimize_module_graph(module_graph: &mut ModuleGraph) {
 
 // This is deliberately a separate operation, as it is in a real optimizer.
 // Its actual contract is narrow: read the module graph and mutate the chunk graph.
+//
+// The direct-field workaround forces this narrow signature. If this optimizer
+// also needs assets, diagnostics, the resolver cache, or other compilation
+// state, each field has to be split out into another parameter. Passing a full
+// `&Compilation` instead would restore the convenient API, but prevents the
+// caller from simultaneously lending `&mut compilation.chunk_graph`.
 fn optimize_chunk_graph(module_graph: &ModuleGraph, chunk_graph: &mut ChunkGraph) {
     chunk_graph.optimized_module_count = module_graph.modules.len();
 }
