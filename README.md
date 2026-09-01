@@ -17,8 +17,10 @@ That command **fails intentionally** with `E0502`.
 fn optimize_chunk_graph(module_graph: &ModuleGraph, chunk_graph: &mut ChunkGraph)
 ```
 
-It only reads `ModuleGraph` and only mutates `ChunkGraph`. Those two fields are
-disjoint members of `Compilation`, so the call is memory-safe:
+It only reads `ModuleGraph` and only mutates `ChunkGraph`. The example's
+`Compilation` also carries assets, diagnostics, a resolver cache, and runtime
+requirements—typical unrelated state in a compiler/build-system context. The
+two graph fields are still disjoint, so the call is memory-safe:
 
 ```rust
 optimize_chunk_graph(compilation.module_graph(), compilation.chunk_graph_mut());

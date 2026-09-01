@@ -9,9 +9,33 @@ struct ChunkGraph {
 }
 
 #[derive(Default)]
+struct AssetStore {
+    emitted_assets: Vec<&'static str>,
+}
+
+#[derive(Default)]
+struct Diagnostics {
+    warnings: Vec<&'static str>,
+}
+
+#[derive(Default)]
+struct ResolverCache {
+    resolved_requests: usize,
+}
+
+#[derive(Default)]
+struct RuntimeRequirements {
+    entries: Vec<&'static str>,
+}
+
+#[derive(Default)]
 struct Compilation {
     module_graph: ModuleGraph,
     chunk_graph: ChunkGraph,
+    assets: AssetStore,
+    diagnostics: Diagnostics,
+    resolver_cache: ResolverCache,
+    runtime_requirements: RuntimeRequirements,
 }
 
 impl Compilation {
@@ -46,6 +70,18 @@ fn main() {
     let mut compilation = Compilation {
         module_graph: ModuleGraph {
             modules: vec!["entry", "runtime"],
+        },
+        assets: AssetStore {
+            emitted_assets: vec!["main.js"],
+        },
+        diagnostics: Diagnostics {
+            warnings: vec!["asset size exceeds the recommended limit"],
+        },
+        resolver_cache: ResolverCache {
+            resolved_requests: 42,
+        },
+        runtime_requirements: RuntimeRequirements {
+            entries: vec!["__webpack_require__"],
         },
         ..Default::default()
     };
