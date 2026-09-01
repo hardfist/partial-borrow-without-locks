@@ -76,6 +76,12 @@ fn optimize(compilation: &mut Compilation) {
     // A partial-borrow-aware method signature could state that the first method
     // borrows only `module_graph` and the second only `chunk_graph`; these paths
     // are disjoint, so this call should then be accepted.
+    //
+    // Replacing these getters with direct field access compiles today:
+    // `optimize_chunk_graph(&compilation.module_graph, &mut compilation.chunk_graph)`.
+    // That contrast is the point: conventional getters hide the field paths and
+    // impose a coarser borrow boundary than direct access. This OOP-style API
+    // does not fit naturally with Rust's field-sensitive borrow checking.
     optimize_chunk_graph(compilation.module_graph(), compilation.chunk_graph_mut());
 }
 
