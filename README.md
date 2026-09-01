@@ -1,37 +1,47 @@
 # Partial borrow without locks
 
-A tiny Rust example for a common large-system shape: one global-ish
-`Compilation` contains two logically independent graphs. An operation needs to
-read `ModuleGraph` while it updates `ChunkGraph`.
+This repository demonstrates a partial-borrow limitation in Rust's ordinary
+method signatures.
 
 ```sh
-cargo run
+cargo check --example current_rust_rejects
 ```
 
-## The point
+That command **fails intentionally** with `E0502`.
 
-Global lifetime does **not** imply shared mutation or a lock. If the operation
-really reads one field and writes another, model that fact directly:
+## The minimal case
+
+`optimize_chunk_graph` is an independent operation:
 
 ```rust
-let Compilation { module_graph, chunk_graph } = self;
-chunk_graph.module_counts.push(module_graph.modules.len());
+fn optimize_chunk_graph(module_graph: &ModuleGraph, chunk_graph: &mut ChunkGraph)
 ```
 
-Rust accepts this because the borrows are disjoint and their safety is still
-checked statically. No `Arc`, `Mutex`, `RefCell`, runtime borrow failure,
-deadlock risk, or synchronization overhead is needed for this operation.
+It only reads `ModuleGraph` and only mutates `ChunkGraph`. Those two fields are
+disjoint members of `Compilation`, so the call is memory-safe:
 
-`Arc` remains useful for genuinely shared ownership, and a lock is useful for
-genuinely concurrent mutable access. They should not be the default workaround
-for a purely structural borrow problem.
+```rust
+optimize_chunk_graph(compilation.module_graph(), compilation.chunk_graph_mut());
+```
 
-## Why this matters in a God Object
+Yet stable Rust rejects it. The problem is not the operation itself; it is that
+the public types of the accessor methods are `&self` and `&mut self`. At the
+call site, the compiler must conservatively treat each as borrowing the whole
+`Compilation`, even though their implementations access different fields.
 
-God Objects are often worth decomposing, but they also occur in real compiler,
-build, and database systems. While refactoring, a partial-borrow-friendly API
-lets code express the actual dependency boundary rather than turning an
-otherwise single-threaded mutation into interior mutability.
+## The desired partial-borrow behavior
+
+A good partial-borrow mechanism would let a method say which field path it
+borrows. In this example, `module_graph()` would expose a shared borrow of only
+`module_graph`, while `chunk_graph_mut()` would expose a mutable borrow of only
+`chunk_graph`. Since the paths do not overlap, the optimizer call should compile
+without `Arc`, `Mutex`, `RefCell`, cloning, or splitting the operation back into
+the caller.
+
+Current Rust can accept a one-off workaround if the caller destructures the
+fields directly. That is precisely the issue: a reusable, separately defined
+optimizer cannot retain the object-oriented accessor boundary while conveying
+its narrow borrow footprint.
 
 ## Discussion context
 
