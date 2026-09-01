@@ -31,19 +31,6 @@ The first line is a preceding pipeline stage that mutates the module graph; it
 finishes before the chunk-graph stage begins. The second line then reads that
 optimized module graph while changing the independent chunk graph.
 
-## This is not an immutable-state design
-
-Every field in `Compilation` may be mutated over the lifetime of a compilation.
-The relevant guarantee is instead phase-local: stage 1 mutates `ModuleGraph`;
-stage 2 mutates `ChunkGraph` while reading the already-optimized
-`ModuleGraph`. The other fields may have their own stages.
-
-`Arc` is therefore not a direct solution. It models shared ownership, not the
-fact that mutation is confined to a particular field in a particular phase.
-`Arc<Mutex<_>>` or interior mutability can force the code to work, but replaces
-this statically known, ordered access pattern with synchronization or runtime
-borrow checks.
-
 Yet stable Rust rejects it. The problem is not the operation itself; it is that
 the public types of the accessor methods are `&self` and `&mut self`. At the
 call site, the compiler must conservatively treat each as borrowing the whole
