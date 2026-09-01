@@ -23,8 +23,13 @@ requirements—typical unrelated state in a compiler/build-system context. The
 two graph fields are still disjoint, so the call is memory-safe:
 
 ```rust
+optimize_module_graph(compilation.module_graph_mut());
 optimize_chunk_graph(compilation.module_graph(), compilation.chunk_graph_mut());
 ```
+
+The first line is a preceding pipeline stage that mutates the module graph; it
+finishes before the chunk-graph stage begins. The second line then reads that
+optimized module graph while changing the independent chunk graph.
 
 Yet stable Rust rejects it. The problem is not the operation itself; it is that
 the public types of the accessor methods are `&self` and `&mut self`. At the

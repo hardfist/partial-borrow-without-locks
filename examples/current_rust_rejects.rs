@@ -44,9 +44,18 @@ impl Compilation {
         &self.module_graph
     }
 
+    fn module_graph_mut(&mut self) -> &mut ModuleGraph {
+        &mut self.module_graph
+    }
+
     fn chunk_graph_mut(&mut self) -> &mut ChunkGraph {
         &mut self.chunk_graph
     }
+}
+
+// An earlier pipeline stage has exclusive access to the module graph.
+fn optimize_module_graph(module_graph: &mut ModuleGraph) {
+    module_graph.modules.retain(|module| *module != "runtime");
 }
 
 // This is deliberately a separate operation, as it is in a real optimizer.
@@ -56,6 +65,10 @@ fn optimize_chunk_graph(module_graph: &ModuleGraph, chunk_graph: &mut ChunkGraph
 }
 
 fn optimize(compilation: &mut Compilation) {
+    // Stage 1: mutate the module graph.
+    optimize_module_graph(compilation.module_graph_mut());
+
+    // Stage 2: use the optimized module graph to update the chunk graph.
     // Current Rust rejects this with E0502. It sees `module_graph()` as an
     // immutable borrow of the whole `Compilation`, then `chunk_graph_mut()` as
     // a mutable borrow of the whole `Compilation`.
