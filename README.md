@@ -4,7 +4,7 @@ This repository demonstrates a partial-borrow limitation in Rust's ordinary
 method signatures.
 
 ```sh
-cargo check --example current_rust_rejects
+cargo check
 ```
 
 That command **fails intentionally** with `E0502`.
