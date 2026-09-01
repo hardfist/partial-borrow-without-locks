@@ -9,7 +9,7 @@ struct ModuleGraph {
 
 #[derive(Debug, Default)]
 struct ChunkGraph {
-    chunks: Vec<Vec<&'static str>>,
+    module_counts: Vec<usize>,
 }
 
 #[derive(Debug, Default)]
@@ -21,13 +21,13 @@ struct Compilation {
 impl Compilation {
     /// The API documents the true dependency: read modules, mutate chunks.
     /// Destructuring gives each operation a borrow of only the field it needs.
-    fn add_chunk_from_all_modules(&mut self) {
+    fn record_module_count(&mut self) {
         let Self {
             module_graph,
             chunk_graph,
         } = self;
 
-        chunk_graph.chunks.push(module_graph.modules.clone());
+        chunk_graph.module_counts.push(module_graph.modules.len());
     }
 }
 
@@ -39,6 +39,6 @@ fn main() {
         ..Default::default()
     };
 
-    compilation.add_chunk_from_all_modules();
+    compilation.record_module_count();
     println!("{:#?}", compilation);
 }

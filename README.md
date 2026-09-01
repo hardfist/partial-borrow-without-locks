@@ -15,7 +15,7 @@ really reads one field and writes another, model that fact directly:
 
 ```rust
 let Compilation { module_graph, chunk_graph } = self;
-chunk_graph.chunks.push(module_graph.modules.clone());
+chunk_graph.module_counts.push(module_graph.modules.len());
 ```
 
 Rust accepts this because the borrows are disjoint and their safety is still
